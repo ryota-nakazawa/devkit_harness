@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: {{PRIMARY_COLOR}};
+      --bg: {{BG_COLOR}};
+      --text: {{TEXT_COLOR}};
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; }
+    .btn-primary { background: var(--primary); color: white; }
+    .accent { color: var(--primary); }
+    .card { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,.06); transition: transform .2s; }
+    .card:hover { transform: translateY(-4px); }
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="py-6 px-8 flex justify-between items-center">
+    <div class="font-bold">{{TITLE}}</div>
+    <nav class="space-x-6 text-sm">
+      <a href="#works" class="hover:underline">作品</a>
+      <a href="#about" class="hover:underline">自己紹介</a>
+      <a href="#contact" class="hover:underline">連絡</a>
+    </nav>
+  </header>
+
+  <section class="text-center py-20 px-6">
+    <h1 class="text-6xl font-bold mb-4">{{TITLE}}</h1>
+    <p class="text-xl opacity-80 max-w-xl mx-auto">{{DESCRIPTION}}</p>
+  </section>
+
+  <section id="works" class="max-w-5xl mx-auto px-8 py-12">
+    <h2 class="text-3xl font-bold mb-8"><span class="accent">●</span> 作品</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      {{ITEMS}}
+    </div>
+  </section>
+
+  <section id="about" class="max-w-3xl mx-auto px-8 py-12 text-center">
+    <h2 class="text-3xl font-bold mb-4">自己紹介</h2>
+    <p class="opacity-80 leading-relaxed">{{DESCRIPTION}}</p>
+  </section>
+
+  <section id="contact" class="text-center py-12">
+    <a href="mailto:hello@example.com" class="btn-primary inline-block px-8 py-3 rounded-full font-semibold">
+      お仕事のご相談
+    </a>
+  </section>
+
+  <footer class="text-center py-6 text-sm opacity-60">© 2026 {{TITLE}}</footer>
+</body>
+</html>

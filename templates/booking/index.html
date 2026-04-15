@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: {{PRIMARY_COLOR}};
+      --bg: {{BG_COLOR}};
+      --text: {{TEXT_COLOR}};
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; }
+    .btn-primary { background: var(--primary); color: white; }
+    .slot { border: 1px solid #e5e7eb; cursor: pointer; }
+    .slot:hover { border-color: var(--primary); }
+    .slot.selected { background: var(--primary); color: white; border-color: var(--primary); }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-2">{{TITLE}}</h1>
+    <p class="opacity-70 mb-8">{{DESCRIPTION}}</p>
+
+    <form id="bookingForm" class="space-y-6">
+      <div>
+        <label class="block text-sm font-semibold mb-2">希望日</label>
+        <input type="date" name="date" required class="w-full px-4 py-2 border rounded-lg focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-2">希望時間</label>
+        <div class="grid grid-cols-4 gap-2" id="slots">
+          <div class="slot rounded-lg py-2 text-center" data-time="10:00">10:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="11:00">11:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="13:00">13:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="14:00">14:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="15:00">15:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="16:00">16:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="17:00">17:00</div>
+          <div class="slot rounded-lg py-2 text-center" data-time="18:00">18:00</div>
+        </div>
+        <input type="hidden" name="time" id="timeInput" required>
+      </div>
+
+      {{ITEMS}}
+
+      <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold hover:opacity-90">
+        予約する
+      </button>
+    </form>
+
+    <div id="result" class="hidden mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+      ✓ 予約を受け付けました。確認メールをお送りします。
+    </div>
+  </div>
+
+  <script>
+    const slots = document.querySelectorAll('.slot');
+    const timeInput = document.getElementById('timeInput');
+    slots.forEach(s => s.addEventListener('click', () => {
+      slots.forEach(x => x.classList.remove('selected'));
+      s.classList.add('selected');
+      timeInput.value = s.dataset.time;
+    }));
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const saved = JSON.parse(localStorage.getItem('bookings') || '[]');
+      saved.push({ ...data, at: new Date().toISOString() });
+      localStorage.setItem('bookings', JSON.stringify(saved));
+      document.getElementById('result').classList.remove('hidden');
+      e.target.reset();
+      slots.forEach(x => x.classList.remove('selected'));
+    });
+  </script>
+</body>
+</html>

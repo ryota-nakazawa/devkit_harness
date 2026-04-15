@@ -1,0 +1,15 @@
+# 生成物(プロトタイプ本体)
+output/*
+!output/.gitkeep
+
+# ヒアリング結果
+specs/*.yaml
+
+# 生成履歴ログ(README は残す)
+history/*.jsonl
+
+# OS/エディタ
+.DS_Store
+*.swp
+.vscode/
+.idea/
