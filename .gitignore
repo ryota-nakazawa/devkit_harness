@@ -1,12 +1,21 @@
-# 生成物(プロトタイプ本体)
+# 生成物(プロトタイプ本体)— 旧構造
 output/*
 !output/.gitkeep
 
-# ヒアリング結果
+# 旧ヒアリング結果
 specs/*.yaml
 
 # 生成履歴ログ(README は残す)
 history/*.jsonl
+
+# 案件ごとの全成果物(新構造)
+projects/*
+!projects/.gitkeep
+!projects/README.md
+
+# 単発の学び草稿(README は残す)
+learnings/*.md
+!learnings/README.md
 
 # OS/エディタ
 .DS_Store

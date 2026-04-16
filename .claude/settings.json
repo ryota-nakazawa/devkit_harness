@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'output/.*[.]html$'; then for f in $CLAUDE_FILE_PATHS; do [ -f \"$f\" ] && grep -q '<html' \"$f\" && grep -q '</html>' \"$f\" || echo \"WARN: $f may be incomplete HTML\"; grep -q '{{' \"$f\" && echo \"WARN: unfilled placeholder in $f\"; done; fi"
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '[.]html$'; then for f in $CLAUDE_FILE_PATHS; do echo \"$f\" | grep -q -e '/output/' -e '/projects/' -e '^output/' -e '^projects/' || continue; [ -f \"$f\" ] && grep -q '<html' \"$f\" && grep -q '</html>' \"$f\" || echo \"WARN: $f may be incomplete HTML\"; grep -q '{{' \"$f\" && echo \"WARN: unfilled placeholder in $f\"; done; fi"
           }
         ]
       }
@@ -25,16 +25,19 @@
   },
   "permissions": {
     "allow": [
+      "Bash(open projects/*)",
       "Bash(open output/*)",
       "Bash(cp -r templates/*)",
-      "Bash(mkdir -p output/*)",
-      "Bash(mkdir -p specs)",
-      "Bash(mkdir -p history)",
-      "Write(output/**)",
-      "Write(specs/**)",
-      "Write(history/**)",
-      "Edit(output/**)",
-      "Edit(history/index.jsonl)"
+      "Bash(mkdir -p projects/*)",
+      "Bash(mkdir -p projects/*/*)",
+      "Bash(mkdir -p learnings)",
+      "Bash(mkdir -p recipes/*)",
+      "Write(projects/**)",
+      "Write(learnings/**)",
+      "Write(recipes/**)",
+      "Edit(projects/**)",
+      "Edit(learnings/**)",
+      "Edit(recipes/**)"
     ],
     "deny": [
       "Write(/**)",

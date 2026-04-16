@@ -1,48 +1,100 @@
 ---
 name: history-reuse
-description: 「前回の○○をベースに」「さっきのやつに似たやつ」といった過去プロトタイプを参照する依頼があったときに起動。history/index.jsonl から該当エントリを見つけ、そのoutputをコピーして差分修正で新しいプロトタイプを生成する。
+description: 「前回の○○をベースに」「さっきのやつに似たやつ」「過去の似た案件は?」といった発話で起動する。projects/ と recipes/ の両方を検索し、過去の成果物 + 確定レシピを新案件に流用する。
 ---
 
 # History Reuse
 
 ## 起動条件
-ユーザーの発話に以下のような過去参照が含まれるとき：
-- 「前回の〜をベースに」
-- 「さっき作った〜みたいなやつ」
-- 「この前のカフェをパン屋に変えて」
-- 「○○を参考に△△を作って」
+
+- 「前回の○○をベースに」「さっきのやつ」「この前の△△を参考に」
+- 「過去の似た案件は?」「同じパターンの案件あった?」
+- フェーズ2(解決手段の選定)で `recipes/` 検索を行うときも内部的に呼ばれる
+
+## 検索対象(2系統)
+
+| 系統 | 場所 | 何を持つか | 信頼度 |
+|---|---|---|---|
+| **projects/** | 個別案件の成果物 | 1案件丸ごと(spec, prototype, validation) | 単発(参考) |
+| **recipes/** | 確定レシピ | 複数案件で再現された "成功パターン" | 高(優先) |
+
+**検索順序**: まず `recipes/` を当たり、ヒットが無ければ `projects/` を当たる。
+`recipes/` は複数案件の検証を経ているので、単発の `projects/` より優先度が高い。
 
 ## 手順
 
-### STEP 1: 履歴検索
-1. `history/index.jsonl` を読み込む（空なら「履歴がありません」と報告して `prototype-flow` にフォールバック）
-2. ユーザーの発話からキーワードを抽出（例：「カフェ」「フォーム」「前回」）
-3. `title` / `summary` / `project_name` を対象に部分一致検索
-4. ヒットが1件 → そのまま採用
-5. 複数ヒット → 直近から3件をユーザーに提示して選ばせる
-6. ヒット0件 → `prototype-flow` にフォールバック
+### STEP 1: キーワード抽出
+ユーザー発話から以下を抽出:
+- 業界(カフェ/医療/SaaS/...)
+- 用途(予約/問い合わせ/ダッシュボード/...)
+- 特徴的な要件(名前付き/暗黙)
 
-### STEP 2: 差分ヒアリング
-通常の5問ではなく、**変更点だけ聞く**（最大3問）：
-1. タイトルや名前は変わりますか？
-2. 見た目の雰囲気は同じでいいですか？
-3. 追加・変更したい項目はありますか？
+### STEP 2: recipes/ 検索
+1. `recipes/<tag>/recipe.md` の frontmatter `domain` と `tag` を全件スキャン
+2. キーワードと一致するものを抽出
+3. ヒットがあれば `times_used` 降順で並べる
 
-### STEP 3: 複製と修正
-1. 元の `output_path` を `output/<new_project_name>/` にコピー
-2. ヒアリング結果を元に Edit で差分修正
-3. 元の spec を参考に新しい spec.yaml を保存（`based_on: <元のid>` を含める）
+### STEP 3: projects/ 検索(recipes/ で見つからない場合のみ)
+1. `projects/*/phase-1-requirements.md` と `phase-5-spec.md` をスキャン
+2. キーワードと一致するものを抽出
+3. ヒットを `created_at` 降順で並べる
 
-### STEP 4: 検証 & 履歴追記
-- `prototype-flow` の STEP 4（検証）を実行
-- 完了後に `history/index.jsonl` に新しいエントリを追加
-- エントリには `based_on: <元のid>` を含めて系譜を追跡可能にする
+### STEP 4: 提示
+1〜3件をユーザーに提示:
 
-### STEP 5: プレビュー
-`prototype-flow` の STEP 5 と同じ。
+```
+🔍 過去の参考案件が見つかりました
+
+[recipes/] (確定レシピ)
+1. recipes/booking-smb/ — 中小企業向け予約系(3/3成功)
+
+[projects/] (単発案件)
+2. projects/clinic-reservation/ — 整体予約 (2026-04-10)
+3. projects/cafe-membership/ — カフェ会員管理 (2026-03-22)
+
+どれをベースにしますか? それとも新規にしますか?
+```
+
+### STEP 5: 流用方式の選択
+
+**recipes/ から流用する場合**:
+- `recipes/<tag>/spec-template.yaml` を新案件の `phase-5-spec.md` の出発点にする
+- `recipes/<tag>/snippets/` を `projects/<new>/prototype/` の素材に
+- `recipes/<tag>/recipe.md` の「適用条件」「外したこと」を読み込み、Phase 1 のヒアリング時に**注意点として提示**
+
+**projects/ から流用する場合**:
+- 元 project の `phase-5-spec.md` を新案件の出発点にする(差分編集)
+- 元 project の `prototype/` を `projects/<new>/prototype/` にコピー
+- 元の `phase-9-next.md` の「次回試したいこと」を新案件の Phase 1 に反映
+
+### STEP 6: 差分のみ Phase 1 を実行
+通常の Phase 1 は brief を貼り付けからだが、流用時は **差分質問のみ**:
+- 何が変わるか?
+- 何を残すか?
+- 元案件で外した点を回避するか?
+
+これらを `phase-1-requirements.md` に追記し、`based_on` フィールドで参照元を記録:
+
+```yaml
+---
+project: <new-slug>
+phase: 1
+based_on: recipes/booking-smb | projects/clinic-reservation
+created_at: <ISO>
+---
+```
+
+### STEP 7: phase-2 以降は通常通り
+Phase 2 で改めて選定理由を記録(流用元をどう活かすか)、以降通常フローに乗せる。
 
 ## 禁止事項
 
-- **履歴ファイルを `output/` 外に書き出さない**
-- **古いプロジェクトを勝手に上書きしない**（必ず新しい project_name で複製）
-- **`based_on` を省略しない**（系譜が途切れると再利用時の探索が困難になる）
+- **元の `projects/<original>/` を上書きしない**(必ず新 slug で複製)
+- **`based_on` を省略しない**(系譜が途切れる)
+- **`recipes/` を勝手に書き換えない**(昇格は phase-9 の責務)
+- **検索ヒットゼロの時に強引に流用しない**(無関係な過去案件を引っ張ると品質が落ちる)
+
+## ヒット0件のとき
+
+何も流用せず、通常の `phase-1-hearing` skill にフォールバックする。
+このとき、新規案件として正常に進めれば良い(無理に過去から探さない)。
